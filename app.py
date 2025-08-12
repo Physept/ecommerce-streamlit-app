@@ -1,5 +1,3 @@
-# E-Commerce Database Project
-# Main application file: app.py (SQLite Version)
 
 import streamlit as st
 import sqlite3
@@ -11,10 +9,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 
-# Database configuration
+# Db config
 DATABASE_PATH = 'ecommerce.db'
 
-# Database connection
+# Db conn
 def create_connection():
     try:
         connection = sqlite3.connect(DATABASE_PATH)
@@ -24,7 +22,7 @@ def create_connection():
         st.error(f"Error connecting to SQLite: {e}")
         return None
 
-# Initialize database and tables
+# Db initialize
 def init_database():
     connection = sqlite3.connect(DATABASE_PATH)
     cursor = connection.cursor()
@@ -907,3 +905,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
