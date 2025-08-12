@@ -601,7 +601,7 @@ def main():
                         st.subheader(product['product_name'])
                         if product['image_url']:
                             st.image(product['image_url'], use_container_width=True)
-                        st.write(f"**Price:** ${product['price']:.2f}")
+                        st.write(f"**Price:** ${float(product['price']):.2f}")
                         st.write(f"**Category:** {product['category_name']}")
                         st.write(f"**Stock:** {product['stock_quantity']} units")
                         st.write(product['description'][:100] + "..." if len(str(product['description'])) > 100 else product['description'])
@@ -626,14 +626,14 @@ def main():
                     with col1:
                         st.write(f"**{item['product_name']}**")
                     with col2:
-                        st.write(f"${item['price']:.2f}")
+                        st.write(f"${float(item['price']):.2f}")
                     with col3:
                         st.write(f"Qty: {item['quantity']}")
                     with col4:
-                        st.write(f"${item['subtotal']:.2f}")
+                        st.write(f"${float(item['subtotal']):.2f}")
                 
                 st.divider()
-                st.subheader(f"Total: ${cart_items['subtotal'].sum():.2f}")
+                st.subheader(f"Total: ${float(cart_items['subtotal'].sum()):.2f}")
                 
                 # Checkout form
                 with st.form("checkout_form"):
@@ -660,7 +660,7 @@ def main():
                     with st.expander(f"Order #{order['order_id']} - {order['order_date']}"):
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.write(f"**Total:** ${order['total_amount']:.2f}")
+                            st.write(f"**Total:** ${float(order['total_amount']):.2f}")
                             st.write(f"**Status:** {order['status']}")
                         with col2:
                             st.write(f"**Payment:** {order['payment_method']}")
@@ -725,7 +725,7 @@ def main():
                         
                         # Display products in a more user-friendly format
                         for idx, product in products.iterrows():
-                            with st.expander(f"{product['product_name']} - ${product['price']:.2f}"):
+                            with st.expander(f"{product['product_name']} - ${float(product['price']):.2f}"):
                                 col_a, col_b = st.columns(2)
                                 with col_a:
                                     st.write(f"**Category:** {product['category_name']}")
@@ -799,13 +799,17 @@ def main():
             if not daily_sales.empty:
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Total Revenue", f"${daily_sales['revenue'].sum():,.2f}")
+                    st.metric("Total Revenue", f"${float(daily_sales['revenue'].sum()):.2f}")
                 with col2:
-                    st.metric("Total Orders", f"{daily_sales['orders'].sum():,}")
+                    st.metric("Total Orders", f"{int(daily_sales['orders'].sum()):,}")
                 with col3:
-                    st.metric("Avg Order Value", f"${daily_sales['revenue'].sum() / daily_sales['orders'].sum():.2f}")
+                    if daily_sales['orders'].sum() > 0:
+                        avg_order = float(daily_sales['revenue'].sum()) / float(daily_sales['orders'].sum())
+                        st.metric("Avg Order Value", f"${avg_order:.2f}")
+                    else:
+                        st.metric("Avg Order Value", "$0.00")
                 with col4:
-                    st.metric("Daily Avg Revenue", f"${daily_sales['revenue'].mean():,.2f}")
+                    st.metric("Daily Avg Revenue", f"${float(daily_sales['revenue'].mean()):.2f}")
         with tab6:
             st.header("🗄️ Database Viewer")
             st.write("View all database tables and their contents")
