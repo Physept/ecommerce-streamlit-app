@@ -601,9 +601,13 @@ def main():
                         st.subheader(product['product_name'])
                         if product['image_url']:
                             st.image(product['image_url'], use_container_width=True)
-                        st.write(f"**Price:** ${float(product['price']):.2f}")
-                        st.write(f"**Category:** {product['category_name']}")
-                        st.write(f"**Stock:** {product['stock_quantity']} units")
+                        try:
+                            price = float(product['price']) if product['price'] is not None else 0.0
+                            st.write(f"**Price:** ${price:.2f}")
+                        except (ValueError, TypeError):
+                            st.write(f"**Price:** $0.00")
+                        st.write(f"**Category:** {product['category_name'] if product['category_name'] else 'Uncategorized'}")
+                        st.write(f"**Stock:** {product['stock_quantity'] if product['stock_quantity'] is not None else 0} units")
                         st.write(product['description'][:100] + "..." if len(str(product['description'])) > 100 else product['description'])
                         
                         quantity = st.number_input(f"Qty", min_value=1, max_value=product['stock_quantity'], 
@@ -626,14 +630,26 @@ def main():
                     with col1:
                         st.write(f"**{item['product_name']}**")
                     with col2:
-                        st.write(f"${float(item['price']):.2f}")
+                        try:
+                            price = float(item['price']) if item['price'] is not None else 0.0
+                            st.write(f"${price:.2f}")
+                        except (ValueError, TypeError):
+                            st.write("$0.00")
                     with col3:
-                        st.write(f"Qty: {item['quantity']}")
+                        st.write(f"Qty: {item['quantity'] if item['quantity'] is not None else 0}")
                     with col4:
-                        st.write(f"${float(item['subtotal']):.2f}")
+                        try:
+                            subtotal = float(item['subtotal']) if item['subtotal'] is not None else 0.0
+                            st.write(f"${subtotal:.2f}")
+                        except (ValueError, TypeError):
+                            st.write("$0.00")
                 
                 st.divider()
-                st.subheader(f"Total: ${float(cart_items['subtotal'].sum()):.2f}")
+                try:
+                    cart_total = float(cart_items['subtotal'].sum()) if not cart_items['subtotal'].isna().all() else 0.0
+                    st.subheader(f"Total: ${cart_total:.2f}")
+                except (ValueError, TypeError):
+                    st.subheader("Total: $0.00")
                 
                 # Checkout form
                 with st.form("checkout_form"):
@@ -660,11 +676,15 @@ def main():
                     with st.expander(f"Order #{order['order_id']} - {order['order_date']}"):
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.write(f"**Total:** ${float(order['total_amount']):.2f}")
-                            st.write(f"**Status:** {order['status']}")
+                            try:
+                                total = float(order['total_amount']) if order['total_amount'] is not None else 0.0
+                                st.write(f"**Total:** ${total:.2f}")
+                            except (ValueError, TypeError):
+                                st.write(f"**Total:** $0.00")
+                            st.write(f"**Status:** {order['status'] if order['status'] else 'Unknown'}")
                         with col2:
-                            st.write(f"**Payment:** {order['payment_method']}")
-                            st.write(f"**Shipping:** {order['shipping_address']}")
+                            st.write(f"**Payment:** {order['payment_method'] if order['payment_method'] else 'Not specified'}")
+                            st.write(f"**Shipping:** {order['shipping_address'] if order['shipping_address'] else 'Not specified'}")
             else:
                 st.info("No orders yet")
         
@@ -725,7 +745,12 @@ def main():
                         
                         # Display products in a more user-friendly format
                         for idx, product in products.iterrows():
-                            with st.expander(f"{product['product_name']} - ${float(product['price']):.2f}"):
+                            try:
+                                price = float(product['price']) if product['price'] is not None else 0.0
+                                title = f"{product['product_name']} - ${price:.2f}"
+                            except (ValueError, TypeError):
+                                title = f"{product['product_name']} - $0.00"
+                            with st.expander(title):
                                 col_a, col_b = st.columns(2)
                                 with col_a:
                                     st.write(f"**Category:** {product['category_name']}")
@@ -799,17 +824,34 @@ def main():
             if not daily_sales.empty:
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Total Revenue", f"${float(daily_sales['revenue'].sum()):.2f}")
+                    try:
+                        total_revenue = float(daily_sales['revenue'].sum()) if not daily_sales['revenue'].isna().all() else 0.0
+                        st.metric("Total Revenue", f"${total_revenue:.2f}")
+                    except (ValueError, TypeError):
+                        st.metric("Total Revenue", "$0.00")
                 with col2:
-                    st.metric("Total Orders", f"{int(daily_sales['orders'].sum()):,}")
+                    try:
+                        total_orders = int(daily_sales['orders'].sum()) if not daily_sales['orders'].isna().all() else 0
+                        st.metric("Total Orders", f"{total_orders:,}")
+                    except (ValueError, TypeError):
+                        st.metric("Total Orders", "0")
                 with col3:
-                    if daily_sales['orders'].sum() > 0:
-                        avg_order = float(daily_sales['revenue'].sum()) / float(daily_sales['orders'].sum())
-                        st.metric("Avg Order Value", f"${avg_order:.2f}")
-                    else:
+                    try:
+                        revenue_sum = float(daily_sales['revenue'].sum()) if not daily_sales['revenue'].isna().all() else 0.0
+                        orders_sum = float(daily_sales['orders'].sum()) if not daily_sales['orders'].isna().all() else 0.0
+                        if orders_sum > 0:
+                            avg_order = revenue_sum / orders_sum
+                            st.metric("Avg Order Value", f"${avg_order:.2f}")
+                        else:
+                            st.metric("Avg Order Value", "$0.00")
+                    except (ValueError, TypeError, ZeroDivisionError):
                         st.metric("Avg Order Value", "$0.00")
                 with col4:
-                    st.metric("Daily Avg Revenue", f"${float(daily_sales['revenue'].mean()):.2f}")
+                    try:
+                        daily_avg = float(daily_sales['revenue'].mean()) if not daily_sales['revenue'].isna().all() else 0.0
+                        st.metric("Daily Avg Revenue", f"${daily_avg:.2f}")
+                    except (ValueError, TypeError):
+                        st.metric("Daily Avg Revenue", "$0.00")
         with tab6:
             st.header("🗄️ Database Viewer")
             st.write("View all database tables and their contents")
